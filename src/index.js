@@ -1,13 +1,24 @@
 import * as PIXI from 'pixi.js';
 
-import { Card, SUITS, RANKS } from './card';
+import { Deck } from './deck';
+import { PileTableau, PileFoundation, PileStock, PileWaste } from './pile';
+
+const TABLEAU = 7;
+const FOUNDATION = 4;
 
 export class Game {
     constructor (width, height) {
         this.app = new PIXI.Application(width, height, { backgroundColor: 0x076324, antialias: true });
         document.body.appendChild(this.app.view);
 
-        this._deck = [];
+        // init a deck
+        this._deck = new Deck();
+
+        // init the piles
+        this._stock = new PileStock();
+        this._waste = new PileWaste();
+        this._tableau = new Array(TABLEAU).fill().map(() => new PileTableau());
+        this._foundation = new Array(FOUNDATION).fill().map(() => new PileFoundation());
     }
 
     load () {
@@ -18,76 +29,78 @@ export class Game {
 
     _onAssetsLoaded () {
         this._setup();
-        this._layout();
+        this._build();
     }
 
     _setup () {
-        SUITS.forEach(suit => {
-            RANKS.forEach(rank => {
-                let card = new Card(suit, rank);
-                this._deck.push(card);
-                this.app.stage.addChild(card);
-                card
-                    .on('pointerdown', this._onDragStart.bind(this))
-                    .on('pointerup', this._onDragStop.bind(this))
-                    .on('pointerupoutside', this._onDragStop.bind(this))
-                    .on('pointermove', this._onDragMove.bind(this));
-            });
+        this._deck.create();
+        this._deck.cards.forEach(card => {
+            this.app.stage.addChild(card);
+            // card
+            //     .on('pointerdown', this._onDragStart.bind(this))
+            //     .on('pointerup', this._onDragStop.bind(this))
+            //     .on('pointerupoutside', this._onDragStop.bind(this))
+            //     .on('pointermove', this._onDragMove.bind(this));
+        });
+
+        this._stock.position.set(0, 0);
+        this.app.stage.addChildAt(this._stock, 0);
+
+        this._waste.position.set(100, 0);
+        this.app.stage.addChildAt(this._waste, 0);
+
+        this._foundation.forEach((pile, index) => {
+            pile.position.set((3 + index) * 100, 0);
+            this.app.stage.addChildAt(pile, 0);
+        });
+
+        this._tableau.forEach((pile, index) => {
+            pile.position.set(index * 100, 120);
+            this.app.stage.addChildAt(pile, 0);
         });
     }
 
-    _layout () {
+    _build () {
+        this._deck.shuffle(777);
+        this._deck.cards.forEach(card => {
+            card.on('dragstop', this._onDragStop, this);
+        });
+
         let ix = 0;
-        for (let i = 0; i < 7; i++) {
+        for (let i = 0; i < TABLEAU; i++) {
             for (let j = 0; j < i+1; j++) {
-                this._deck[ix].x = i * 100;
-                this._deck[ix].y = 120 + j * 30;
-                if (j > 0) {
-                    this._deck[ix].head = this._deck[ix - 1];
-                    this._deck[ix - 1].tail = this._deck[ix];
-                }
-                if (j === i) {
-                    this._deck[ix].enable();
-                }
+                this._tableau[i].push(this._deck.cards[ix]);
                 ix++;
             }
+            this._tableau[i].last.enableDrag();
         }
-    }
 
-    _onDragStart (event) {
-        let card = event.target;
-        let newPosition = event.data.getLocalPosition(card.parent);
-        card.dragStart(newPosition);
+        // add remaining card on stock
+        for (ix; ix < this._deck.cards.length; ix++) {
+            this._stock.push(this._deck.cards[ix]);
+        }
+        this._stock.last.enable();
+        this._stock.on('tap', this._onTapStock, this);
     }
 
     _onDragStop (event) {
         let card = event.currentTarget;
 
-        let newPosition = event.data.getLocalPosition(card.parent);
-
-        for (let i = 0; i < this._deck.length; i++) {
-            if (this._deck[i].interactive) {
-                if (this._deck[i].getBounds().contains(newPosition.x, newPosition.y)) {
-                    if (this._deck[i].isRed === card.isBlack) {
-                        console.log(this._deck[i]._suit, this._deck[i]._rank);
-                        let pos = this._deck[i].position.clone();
-                        pos.y += 30;
-                        card.dragStop(pos);
-                        card.head = this._deck[i];
-                        this._deck[i].tail = card;
-                        return;
-                    }
-                }
-            }
+        let i = Math.round((card.x) / 100);
+        let l = this._tableau[i].last;
+        if ((l === undefined && card.rank === 'K') || l.color !== card.color) {
+            card.pile.pop(card);
+            this._tableau[i].push(card);
+            return;
         }
 
-        card.dragStop();
+        card.cancel();
     }
 
-    _onDragMove (event) {
-        let card = event.currentTarget;
-        let newPosition = event.data.getLocalPosition(card.parent);
-        card.dragMove(newPosition);
+    _onTapStock (event) {
+        let card = event.target;
+        this._stock.pop(card);
+        this._waste.push(card);
     }
 }
 
