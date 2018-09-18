@@ -134,6 +134,7 @@ export class Card extends PIXI.Container {
         if (this._dragging) {
             const position = event.data.getLocalPosition(this.parent);
             this.move(position.x - this._dragOffset.x, position.y - this._dragOffset.y);
+            this.emit('dragmove', event);
         }
     }
 

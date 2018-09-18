@@ -29,18 +29,13 @@ export class Game {
 
     _onAssetsLoaded () {
         this._setup();
-        this._build();
+        this._deal();
     }
 
     _setup () {
         this._deck.create();
         this._deck.cards.forEach(card => {
             this.app.stage.addChild(card);
-            // card
-            //     .on('pointerdown', this._onDragStart.bind(this))
-            //     .on('pointerup', this._onDragStop.bind(this))
-            //     .on('pointerupoutside', this._onDragStop.bind(this))
-            //     .on('pointermove', this._onDragMove.bind(this));
         });
 
         this._stock.position.set(0, 0);
@@ -60,12 +55,17 @@ export class Game {
         });
     }
 
-    _build () {
+    _deal () {
+        // shuffle the deck
         this._deck.shuffle(777);
+
+        // listen to when any card is dropped
         this._deck.cards.forEach(card => {
             card.on('dragstop', this._onDragStop, this);
+            card.on('dragmove', this._onDragMove, this);
         });
 
+        // deal the cards on the tableau
         let ix = 0;
         for (let i = 0; i < TABLEAU; i++) {
             for (let j = 0; j < i+1; j++) {
@@ -85,16 +85,24 @@ export class Game {
 
     _onDragStop (event) {
         let card = event.currentTarget;
-
-        let i = Math.round((card.x) / 100);
-        let l = this._tableau[i].last;
-        if ((l === undefined && card.rank === 'K') || l.color !== card.color) {
-            card.pile.pop(card);
-            this._tableau[i].push(card);
-            return;
+        let pile = this._hitTest(card);
+        if (pile) {
+            if (pile.handle(card)) {
+                card.pile.pop(card);
+                pile.push(card);
+                return;
+            }
         }
 
         card.cancel();
+    }
+
+    _onDragMove (event) {
+        let card = event.currentTarget;
+        let pile = this._hitTest(card);
+        if (pile) {
+            pile.debug(true);
+        }
     }
 
     _onTapStock (event) {
@@ -102,7 +110,33 @@ export class Game {
         this._stock.pop(card);
         this._waste.push(card);
     }
+
+    _hitTest (card) {
+        let col, row;
+
+        for (let i = 0; i < FOUNDATION; i++) {
+            this._foundation[i].debug(false);
+        }
+
+        for (let i = 0; i < TABLEAU; i++) {
+            this._tableau[i].debug(false);
+        }
+
+        col = Math.round((card.x - this._foundation[0].x) / 100);
+        row = Math.round((card.y - this._foundation[0].y) / 95);
+        if (col > -1 && col < FOUNDATION && row === 0) {
+            return this._foundation[col];
+        } else {
+            col = Math.round((card.x - this._tableau[0].x) / 100);
+            row = Math.round((card.y - this._tableau[0].y) / 95);
+            if (col > -1 && col < TABLEAU && row > -1) {
+                return this._tableau[col];
+            }
+        }
+
+        return;
+    }
 }
 
-let game = new Game(800, 600);
+let game = new Game(700, 600);
 game.load();

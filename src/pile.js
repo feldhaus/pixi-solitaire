@@ -1,4 +1,5 @@
 import * as PIXI from 'pixi.js';
+import { RANKS } from './card';
 
 export class Pile extends PIXI.Graphics {
     constructor () {
@@ -8,6 +9,14 @@ export class Pile extends PIXI.Graphics {
 
         this.lineStyle(2, 0, 0.2);
         this.drawRoundedRect(0, 0, 70, 95, 5);
+
+        this._debug = new PIXI.Sprite(PIXI.Texture.WHITE);
+        this.addChild(this._debug);
+        this._debug.alpha = 0.1;
+        this._debug.width = 80;
+        this._debug.height = 105;
+        this._debug.x = -5;
+        this._debug.y = -5;
     }
 
     push (card) {
@@ -32,10 +41,20 @@ export class Pile extends PIXI.Graphics {
             this._cards.pop();
             this._unlisten(card);
         }
+        if (this.last) {
+            this.last.tail = null;
+        }
     }
 
-    hitTest (card) {
-        return false;
+    // hitTest (card) {
+    //     return false;
+    // }
+
+    handle (card) {
+    }
+
+    debug (flag) {
+        this._debug.alpha = flag ? 0.5 : 0.1;
     }
 
     _arrange () {
@@ -72,6 +91,19 @@ export class PileTableau extends Pile {
         }
     }
 
+    handle (card) {
+        if (this.last) {
+            let prev = RANKS.indexOf(this.last.rank) - 1;
+            if (prev > -1) {
+                return this.last.color !== card.color && card.rank === RANKS[prev];
+            } else {
+                return false;
+            }
+        } else {
+            return card.rank === 'K';
+        }
+    }
+
     _listen (card) {
         card.on('dragstart', this._onStartDrag, this);
     }
@@ -90,6 +122,20 @@ export class PileTableau extends Pile {
 }
 
 export class PileFoundation extends Pile {
+    handle (card) {
+        if (!card.tail) {
+            if (this.last) {
+                let next = RANKS.indexOf(this.last.rank) + 1;
+                if (next < RANKS.length) {
+                    return this.last.suit === card.suit && card.rank === RANKS[next];
+                } else {
+                    return false;
+                }
+            } else {
+                return card.rank === 'A';
+            }
+        }
+    }
 }
 
 export class PileStock extends Pile {
@@ -132,6 +178,9 @@ export class PileWaste extends Pile {
     pop (card) {
         super.pop(card);
         this._arrange();
+        if (this.last) {
+            this.last.enableDrag();
+        }
     }
 
     _arrange () {
