@@ -12,7 +12,7 @@ export class Pile extends PIXI.Graphics {
 
         this._debug = new PIXI.Sprite(PIXI.Texture.WHITE);
         this.addChild(this._debug);
-        this._debug.alpha = 0.1;
+        this._debug.alpha = 0;
         this._debug.width = 80;
         this._debug.height = 105;
         this._debug.x = -5;
@@ -46,15 +46,11 @@ export class Pile extends PIXI.Graphics {
         }
     }
 
-    // hitTest (card) {
-    //     return false;
-    // }
-
     handle (card) {
     }
 
     debug (flag) {
-        this._debug.alpha = flag ? 0.5 : 0.1;
+        this._debug.alpha = flag ? 0.25 : 0;
     }
 
     _arrange () {
@@ -143,12 +139,27 @@ export class PileStock extends Pile {
         super();
         this._offset.x = 0.2;
         this._offset.y = 0.2;
+        
+        this._area = new PIXI.Sprite(PIXI.Texture.WHITE);
+        this._area.width = 70;
+        this._area.height = 95;
+        this._area.alpha = 0;
+        this.addChild(this._area);
+    }
+
+    push (card) {
+        super.push(card);
+        card.flipDown();
     }
 
     pop (card) {
         super.pop(card);
         if (this.last) {
             this.last.enable();
+        } else {
+            this._area.interactive = true;
+            this._area.buttonMode = true;
+            this._area.once('pointertap', this._onTap, this);
         }
     }
 

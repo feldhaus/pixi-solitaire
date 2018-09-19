@@ -57,7 +57,7 @@ export class Game {
 
     _deal () {
         // shuffle the deck
-        this._deck.shuffle(777);
+        this._deck.shuffle(780);
 
         // listen to when any card is dropped
         this._deck.cards.forEach(card => {
@@ -106,9 +106,18 @@ export class Game {
     }
 
     _onTapStock (event) {
-        let card = event.target;
-        this._stock.pop(card);
-        this._waste.push(card);
+        if (this._stock.last) {
+            let card = event.target;
+            this._stock.pop(card);
+            this._waste.push(card);
+        } else {
+            let card = this._waste.last;
+            while (card) {
+                this._waste.pop(card);
+                this._stock.push(card);
+                card = this._waste.last;
+            }
+        }
     }
 
     _hitTest (card) {
