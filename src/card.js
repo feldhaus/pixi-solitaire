@@ -53,30 +53,6 @@ export class Card extends PIXI.Container {
         this.position.set(x, y);
     }
 
-    /*
-    dragStart (position) {
-        this.dragging = true;
-        this._dragStartPosition = this.position.clone();
-        this._dragOffset.set(position.x - this.x, position.y - this.y);
-        this.bringFoward();
-    }
-
-    dragStop (position) {
-        this.dragging = false;
-        if (position) {
-            this.move(position.x, position.y);
-        } else {
-            this.move(this._dragStartPosition.x, this._dragStartPosition.y);
-        }
-    }
-
-    dragMove (position) {
-        if (this._dragging) {
-            this.move(position.x - this._dragOffset.x, position.y - this._dragOffset.y);
-        }
-    }
-    */
-
     bringFoward () {
         this.parent.addChild(this);
         if (this.tail) {
@@ -121,6 +97,7 @@ export class Card extends PIXI.Container {
     }
 
     _onDragStart (event) {
+        this.moved = false;
         this.dragging = true;
         this._dragStartPosition = this.position.clone();
         this.emit('dragstart', event);
@@ -132,6 +109,7 @@ export class Card extends PIXI.Container {
 
     _onDragMove (event) {
         if (this._dragging) {
+            this.moved = true;
             const position = event.data.getLocalPosition(this.parent);
             this.move(position.x - this._dragOffset.x, position.y - this._dragOffset.y);
             this.emit('dragmove', event);

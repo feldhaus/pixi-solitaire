@@ -63,6 +63,7 @@ export class Game {
         this._deck.cards.forEach(card => {
             card.on('dragstop', this._onDragStop, this);
             card.on('dragmove', this._onDragMove, this);
+            card.on('pointertap', this._onTapCard, this);
         });
 
         // deal the cards on the tableau
@@ -85,11 +86,13 @@ export class Game {
 
     _onDragStop (event) {
         let card = event.currentTarget;
+
         let pile = this._hitTest(card);
         if (pile) {
             if (pile.handle(card)) {
                 card.pile.pop(card);
                 pile.push(card);
+                event.stopPropagation();
                 return;
             }
         }
@@ -99,9 +102,46 @@ export class Game {
 
     _onDragMove (event) {
         let card = event.currentTarget;
+
         let pile = this._hitTest(card);
         if (pile) {
             pile.debug(true);
+        }
+    }
+
+    _onTapCard (event) {
+        let card = event.currentTarget;
+
+        if (card.moved) {
+            return;
+        }
+    
+        if (card.pile instanceof PileStock) {
+            return;
+        }
+
+        let pile;
+
+        if (card.pile instanceof PileWaste || card.pile instanceof PileTableau) {
+            for (let i = 0; i < FOUNDATION; i++) {
+                pile = this._foundation[i];
+                if (card.pile !== pile && pile.handle(card)) {
+                    card.pile.pop(card);
+                    pile.push(card);
+                    event.stopPropagation();
+                    return;
+                }
+            }
+        }
+
+        for (let i = 0; i < TABLEAU; i++) {
+            pile = this._tableau[i];
+            if (card.pile !== pile && pile.handle(card)) {
+                card.pile.pop(card);
+                pile.push(card);
+                event.stopPropagation();
+                return; 
+            }
         }
     }
 

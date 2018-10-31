@@ -1,5 +1,6 @@
 import * as PIXI from 'pixi.js';
 import { RANKS } from './card';
+import { TweenLite } from 'gsap';
 
 export class Pile extends PIXI.Graphics {
     constructor () {
@@ -55,8 +56,12 @@ export class Pile extends PIXI.Graphics {
 
     _arrange () {
         const len = this.length - 1;
-        this.last.x = this.x + this._offset.x * len;
-        this.last.y = this.y + this._offset.y * len;
+        const end = {
+            x: this.x + this._offset.x * len,
+            y: this.y + this._offset.y * len
+        }
+        const dist = Math.sqrt(Math.pow(end.x - this.last.x, 2) + Math.pow(end.y - this.last.y, 2));
+        TweenLite.to(this.last, dist / 1000, {x: end.x, y: end.y});
     }
 
     _listen (card) {
