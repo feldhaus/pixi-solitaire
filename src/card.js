@@ -12,6 +12,7 @@ export const UNICODE = {
 export class Card extends PIXI.Container {
     constructor (suit, rank) {
         super();
+
         this._suit = suit;
         this._rank = rank;
         this._color = suit === 'Diamonds' || suit === 'Hearts'; // 0 - black / 1 - red

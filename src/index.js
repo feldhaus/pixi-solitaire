@@ -8,8 +8,9 @@ const FOUNDATION = 4;
 
 export class Game {
     constructor (width, height) {
-        this.app = new PIXI.Application(width, height, { backgroundColor: 0x076324, antialias: true });
-        document.body.appendChild(this.app.view);
+        // instantiate app
+        this._app = new PIXI.Application(width, height, { backgroundColor: 0x076324, antialias: true });
+        document.body.appendChild(this._app.view);
 
         // init a deck
         this._deck = new Deck();
@@ -33,25 +34,30 @@ export class Game {
     }
 
     _setup () {
+        // add cards
         this._deck.create();
         this._deck.cards.forEach(card => {
-            this.app.stage.addChild(card);
+            this._app.stage.addChild(card);
         });
 
+        // add and position stock pile
         this._stock.position.set(0, 0);
-        this.app.stage.addChildAt(this._stock, 0);
+        this._app.stage.addChildAt(this._stock, 0);
 
+        // add and position waste pile
         this._waste.position.set(100, 0);
-        this.app.stage.addChildAt(this._waste, 0);
+        this._app.stage.addChildAt(this._waste, 0);
 
+        // add and position foundation piles
         this._foundation.forEach((pile, index) => {
             pile.position.set((3 + index) * 100, 0);
-            this.app.stage.addChildAt(pile, 0);
+            this._app.stage.addChildAt(pile, 0);
         });
 
+        // add and position tableu piles
         this._tableau.forEach((pile, index) => {
             pile.position.set(index * 100, 120);
-            this.app.stage.addChildAt(pile, 0);
+            this._app.stage.addChildAt(pile, 0);
         });
     }
 
@@ -85,14 +91,15 @@ export class Game {
     }
 
     _onDragStop (event) {
-        let card = event.currentTarget;
+        const card = event.currentTarget;
+        const pile = this._hitTest(card);
 
-        let pile = this._hitTest(card);
         if (pile) {
             if (pile.handle(card)) {
                 card.pile.pop(card);
                 pile.push(card);
                 event.stopPropagation();
+                this._checkVictory();
                 return;
             }
         }
@@ -101,16 +108,16 @@ export class Game {
     }
 
     _onDragMove (event) {
-        let card = event.currentTarget;
+        const card = event.currentTarget;
+        const pile = this._hitTest(card);
 
-        let pile = this._hitTest(card);
         if (pile) {
             pile.debug(true);
         }
     }
 
     _onTapCard (event) {
-        let card = event.currentTarget;
+        const card = event.currentTarget;
 
         if (card.moved) {
             return;
@@ -121,7 +128,6 @@ export class Game {
         }
 
         let pile;
-
         if (card.pile instanceof PileWaste || card.pile instanceof PileTableau) {
             for (let i = 0; i < FOUNDATION; i++) {
                 pile = this._foundation[i];
@@ -129,6 +135,7 @@ export class Game {
                     card.pile.pop(card);
                     pile.push(card);
                     event.stopPropagation();
+                    this._checkVictory();
                     return;
                 }
             }
@@ -146,12 +153,13 @@ export class Game {
     }
 
     _onTapStock (event) {
+        let card;
         if (this._stock.last) {
-            let card = event.target;
+            card = event.target;
             this._stock.pop(card);
             this._waste.push(card);
         } else {
-            let card = this._waste.last;
+            card = this._waste.last;
             while (card) {
                 this._waste.pop(card);
                 this._stock.push(card);
@@ -161,8 +169,6 @@ export class Game {
     }
 
     _hitTest (card) {
-        let col, row;
-
         for (let i = 0; i < FOUNDATION; i++) {
             this._foundation[i].debug(false);
         }
@@ -171,8 +177,9 @@ export class Game {
             this._tableau[i].debug(false);
         }
 
-        col = Math.round((card.x - this._foundation[0].x) / 100);
-        row = Math.round((card.y - this._foundation[0].y) / 95);
+        let col = Math.round((card.x - this._foundation[0].x) / 100);
+        let row = Math.round((card.y - this._foundation[0].y) / 95);
+
         if (col > -1 && col < FOUNDATION && row === 0) {
             return this._foundation[col];
         } else {
@@ -185,7 +192,16 @@ export class Game {
 
         return;
     }
+
+    _checkVictory () {
+        const sum = this._foundation.reduce((a, c) => {
+            return a + ((c.last && c.last.rank === 'K') ? 1 : 0)
+        }, 0);
+        if (sum === FOUNDATION) {
+            console.log('WIN');
+        }
+    }
 }
 
-let game = new Game(700, 600);
+const game = new Game(700, 600);
 game.load();

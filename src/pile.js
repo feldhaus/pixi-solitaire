@@ -1,10 +1,12 @@
 import * as PIXI from 'pixi.js';
+
 import { RANKS } from './card';
 import { TweenLite } from 'gsap';
 
 export class Pile extends PIXI.Graphics {
     constructor () {
         super();
+
         this._cards = [];
         this._offset = new PIXI.Point(0, 0);
 
@@ -39,7 +41,7 @@ export class Pile extends PIXI.Graphics {
                 this._unlisten(removedCards[i]);
             }
         } else {
-            this._cards.pop();
+            card = this._cards.pop();
             this._unlisten(card);
         }
         if (this.last) {
@@ -64,11 +66,9 @@ export class Pile extends PIXI.Graphics {
         TweenLite.to(this.last, dist / 1000, {x: end.x, y: end.y});
     }
 
-    _listen (card) {
-    }
+    _listen (card) {}
 
-    _unlisten (card) {
-    }
+    _unlisten (card) {}
 
     get length () {
         return this._cards.length;
@@ -142,6 +142,7 @@ export class PileFoundation extends Pile {
 export class PileStock extends Pile {
     constructor () {
         super();
+
         this._offset.x = 0.2;
         this._offset.y = 0.2;
         
@@ -154,6 +155,7 @@ export class PileStock extends Pile {
 
     push (card) {
         super.push(card);
+
         card.flipDown();
     }
 
@@ -180,6 +182,7 @@ export class PileStock extends Pile {
 export class PileWaste extends Pile {
     constructor () {
         super();
+
         this._offset.x = 20;
     }
 
