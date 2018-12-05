@@ -8,6 +8,8 @@ export const UNICODE = {
     'Hearts': '♥',
     'Spades': '♠'
 }
+export const CARD_WIDTH = 140;
+export const CARD_HEIGHT = 190;
 
 export class Card extends PIXI.Container {
     constructor (suit, rank) {
@@ -18,9 +20,6 @@ export class Card extends PIXI.Container {
         this._color = suit === 'Diamonds' || suit === 'Hearts'; // 0 - black / 1 - red
         this._faceUp = false;
         this._pile = null;
-
-        // scale card
-        this.scale.set(0.5, 0.5);
 
         // interactive and drag stuffs
         this.interactive = false;
@@ -85,6 +84,11 @@ export class Card extends PIXI.Container {
     disable () {
         this.interactive = false;
         this.buttonMode = false;
+    }
+
+    resize (width, height) {
+        this.width = width;
+        this.height = height;
     }
 
     enableDrag () {

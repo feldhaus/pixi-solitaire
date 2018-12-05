@@ -2,6 +2,7 @@ import * as PIXI from 'pixi.js';
 
 import { Deck } from './deck';
 import { PileTableau, PileFoundation, PileStock, PileWaste } from './pile';
+import { CARD_WIDTH, CARD_HEIGHT } from './card';
 
 const TABLEAU = 7;
 const FOUNDATION = 4;
@@ -9,8 +10,14 @@ const FOUNDATION = 4;
 export class Game {
     constructor (width, height) {
         // instantiate app
-        this._app = new PIXI.Application(width, height, { backgroundColor: 0x076324, antialias: true });
+        this._app = new PIXI.Application(width, height, { backgroundColor: 0x46963c, antialias: true });
         document.body.appendChild(this._app.view);
+
+        // game is loaded
+        this._loaded = false;
+
+        // space between cards
+        this._cardSpace = new PIXI.Point(CARD_WIDTH, CARD_HEIGHT);
 
         // init a deck
         this._deck = new Deck();
@@ -28,9 +35,19 @@ export class Game {
             .load(this._onAssetsLoaded.bind(this));
     }
 
+    resize (width, height) {
+        this._app.renderer.resize(width, height);
+
+        if (this._loaded) {
+            this._layout();
+        }
+    }
+
     _onAssetsLoaded () {
         this._setup();
+        this._layout();
         this._deal();
+        this._loaded = true;
     }
 
     _setup () {
@@ -40,24 +57,106 @@ export class Game {
             this._app.stage.addChild(card);
         });
 
-        // add and position stock pile
-        this._stock.position.set(0, 0);
+        // add stock pile
         this._app.stage.addChildAt(this._stock, 0);
 
-        // add and position waste pile
-        this._waste.position.set(100, 0);
+        // add waste pile
         this._app.stage.addChildAt(this._waste, 0);
 
-        // add and position foundation piles
+        // add foundation piles
         this._foundation.forEach((pile, index) => {
-            pile.position.set((3 + index) * 100, 0);
             this._app.stage.addChildAt(pile, 0);
         });
 
-        // add and position tableu piles
+        // add tableu piles
         this._tableau.forEach((pile, index) => {
-            pile.position.set(index * 100, 120);
             this._app.stage.addChildAt(pile, 0);
+        });
+    }
+
+    _layout () {
+        if (this.ratio > 1.6) {
+            this._landscapeMode();
+        } else {
+            this._portraidMode();
+        }
+    }
+
+    _landscapeMode () {
+        const COLS = 9;
+        const ROWS = 4;
+
+        const newHeight = this.height / ROWS;
+        const maxHeight = newHeight * 0.8;
+        const maxWidth = CARD_WIDTH * maxHeight / CARD_HEIGHT;
+        const margin = new PIXI.Point(
+            (this.width - maxWidth * COLS) / COLS,
+            newHeight * 0.2
+        );
+
+        this._cardSpace.x = maxWidth + margin.x;
+        this._cardSpace.y = maxHeight + margin.y;
+
+        this._stock.resize(maxWidth, maxHeight);
+        this._stock.x = margin.x / 2;
+        this._stock.y = margin.y / 2;
+
+        this._waste.x = margin.x / 2;
+        this._waste.y = margin.y / 2 + this._cardSpace.y;
+        this._waste.setVertical();
+        this._waste.resize(maxWidth, maxHeight);
+
+        this._foundation.forEach((pile, index) => {
+            pile.resize(maxWidth, maxHeight);
+            pile.x = margin.x / 2 + (COLS - 1) * this._cardSpace.x;
+            pile.y = margin.y / 2 + index * this._cardSpace.y;
+        });
+
+        this._tableau.forEach((pile, index) => {
+            pile.resize(maxWidth, maxHeight);
+            pile.x = margin.x / 2 + (index + 1) * this._cardSpace.x;
+            pile.y = margin.y / 2;
+        });
+
+        this._deck.cards.forEach(card => {
+            card.resize(maxWidth, maxHeight);
+        });
+    }
+
+    _portraidMode () {
+        const COLS = 7;
+
+        const newWidth = this.width / COLS;
+        const margin = newWidth * 0.2;
+        const maxWidth = newWidth * 0.8;
+        const maxHeight = CARD_HEIGHT * maxWidth / CARD_WIDTH;
+
+        this._cardSpace.x = maxWidth + margin;
+        this._cardSpace.y = maxHeight + margin;
+
+        this._stock.resize(maxWidth, maxHeight);
+        this._stock.x = margin / 2;
+        this._stock.y = margin / 2;
+
+        this._waste.x = margin / 2 + this._cardSpace.x;
+        this._waste.y = margin / 2;
+        this._waste.setHorizontal();
+        this._waste.resize(maxWidth, maxHeight);
+        
+        this._foundation.forEach((pile, index) => {
+            pile.resize(maxWidth, maxHeight);
+            pile.x = margin / 2 + (3 + index) * this._cardSpace.x;
+            pile.y = margin / 2;
+        });
+
+        this._tableau.forEach((pile, index) => {
+            pile.resize(maxWidth, maxHeight);
+            pile.x = margin / 2 + index * this._cardSpace.x;
+            pile.y = margin / 2 + maxHeight + margin;
+        });
+
+        this._deck.cards.forEach(card => {
+            card.resize(maxWidth, maxHeight);
         });
     }
 
@@ -177,14 +276,14 @@ export class Game {
             this._tableau[i].debug(false);
         }
 
-        let col = Math.round((card.x - this._foundation[0].x) / 100);
-        let row = Math.round((card.y - this._foundation[0].y) / 95);
+        let col = Math.round((card.x - this._foundation[0].x) / this._cardSpace.x);
+        let row = Math.round((card.y - this._foundation[0].y) / this._cardSpace.y);
 
         if (col > -1 && col < FOUNDATION && row === 0) {
             return this._foundation[col];
         } else {
-            col = Math.round((card.x - this._tableau[0].x) / 100);
-            row = Math.round((card.y - this._tableau[0].y) / 95);
+            col = Math.round((card.x - this._tableau[0].x) / this._cardSpace.x);
+            row = Math.round((card.y - this._tableau[0].y) / this._cardSpace.y);
             if (col > -1 && col < TABLEAU && row > -1) {
                 return this._tableau[col];
             }
@@ -201,7 +300,37 @@ export class Game {
             console.log('WIN');
         }
     }
+
+    get width () {
+        return this._app.renderer.width;
+    }
+
+    get height () {
+        return this._app.renderer.height;
+    }
+
+    get ratio () {
+        return this.width / this.height;
+    }
 }
 
-const game = new Game(700, 600);
-game.load();
+window.onload = () => {
+    // instantiate a game
+    const game = new Game(window.innerWidth, window.innerHeight);
+
+    // load game
+    game.load();
+
+    // when resize window wait 500 miliseconds until resize the game
+    let timeoutId = null;
+    window.addEventListener('resize', () => {
+        if (timeoutId) {
+            clearTimeout(timeoutId);
+        }
+
+        timeoutId = setTimeout(() => {
+            game.resize(window.innerWidth, window.innerHeight)
+            timeoutId = null;
+        }, 500);
+    });
+}
