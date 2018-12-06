@@ -1,12 +1,14 @@
 import * as PIXI from 'pixi.js';
 
 export const SUITS = ['Clubs', 'Diamonds', 'Hearts', 'Spades'];
-export const RANKS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+export const RANKS = [
+    'A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'
+];
 export const UNICODE = {
-    'Clubs': '♣',
+    'Clubs':    '♣',
     'Diamonds': '♦',
-    'Hearts': '♥',
-    'Spades': '♠'
+    'Hearts':   '♥',
+    'Spades':   '♠'
 }
 export const CARD_WIDTH = 140;
 export const CARD_HEIGHT = 190;
@@ -17,7 +19,10 @@ export class Card extends PIXI.Container {
 
         this._suit = suit;
         this._rank = rank;
-        this._color = suit === 'Diamonds' || suit === 'Hearts'; // 0 - black / 1 - red
+
+        // color is based on suit: 0 - black / 1 - red
+        this._color = suit === 'Diamonds' || suit === 'Hearts';
+
         this._faceUp = false;
         this._pile = null;
 
@@ -34,11 +39,11 @@ export class Card extends PIXI.Container {
             Card.backTexture = PIXI.Texture.fromFrame('cardBack_blue4.png');
         }
 
-        // create the back
+        // create and add back sprite
         this._back = new PIXI.Sprite(Card.backTexture);
         this.addChild(this._back);
 
-        // create the front
+        // create and add front sprite
         let frame = ['card', this._suit, this._rank, '.png'].join('');
         this._front = new PIXI.Sprite.fromFrame(frame);
         this._front.visible = false;
@@ -58,10 +63,6 @@ export class Card extends PIXI.Container {
         if (this.tail) {
             this.tail.bringFoward();
         }
-    }
-
-    toString () {
-        return this._rank + UNICODE[this._suit];
     }
 
     flipUp () {
@@ -101,6 +102,14 @@ export class Card extends PIXI.Container {
             .on('pointermove', this._onDragMove, this);
     }
 
+    cancel () {
+        this.move(this._dragStartPosition.x, this._dragStartPosition.y);
+    }
+
+    toString () {
+        return this._rank + UNICODE[this._suit];
+    }
+
     _onDragStart (event) {
         this.moved = false;
         this.dragging = true;
@@ -116,7 +125,10 @@ export class Card extends PIXI.Container {
         if (this._dragging) {
             this.moved = true;
             const position = event.data.getLocalPosition(this.parent);
-            this.move(position.x - this._dragOffset.x, position.y - this._dragOffset.y);
+            this.move(
+                position.x - this._dragOffset.x,
+                position.y - this._dragOffset.y
+            );
             this.emit('dragmove', event);
         }
     }
@@ -159,9 +171,5 @@ export class Card extends PIXI.Container {
 
     get faceUp () {
         return this._faceUp;
-    }
-
-    cancel () {
-        this.move(this._dragStartPosition.x, this._dragStartPosition.y);
     }
 }

@@ -1,18 +1,22 @@
 import * as PIXI from 'pixi.js';
 
-import { RANKS } from './card';
+import { RANKS, CARD_HEIGHT } from './card';
 import { TweenLite } from 'gsap';
 
-export class Pile extends PIXI.Graphics {
+export class Pile extends PIXI.Container {
     constructor () {
         super();
 
         this._cards = [];
         this._offset = new PIXI.Point(0, 0);
 
-        this._debug = new PIXI.Sprite(PIXI.Texture.WHITE);
-        this.addChild(this._debug);
-        this._debug.alpha = 0;
+        this._highlight = new PIXI.Sprite(PIXI.Texture.WHITE);
+        this.addChild(this._highlight);
+        this._highlight.alpha = 0.5;
+        this._highlight.visible = false;
+
+        this._frame = new PIXI.Graphics();
+        this.addChild(this._frame);
     }
 
     push (card) {
@@ -44,19 +48,19 @@ export class Pile extends PIXI.Graphics {
 
     handle (card) {}
 
-    debug (flag) {
-        this._debug.alpha = flag ? 0.25 : 0;
+    highlight (visible) {
+        this._highlight.visible = visible;
     }
 
     resize (width, height) {
-        this.clear();
-        this.lineStyle(3, 0, 0.2);
-        this.drawRoundedRect(0, 0, width, height, 5);
+        this._frame.clear();
+        this._frame.lineStyle(2, 0, 0.2);
+        this._frame.drawRect(-1, -1, width + 2, height + 2);
 
-        this._debug.width = width + 10;
-        this._debug.height = height + 10;
-        this._debug.x = -5;
-        this._debug.y = -5;
+        this._highlight.width = width + 10;
+        this._highlight.height = height + 10;
+        this._highlight.x = -5;
+        this._highlight.y = -5;
 
         this._arrange();
     }
@@ -113,11 +117,6 @@ export class Pile extends PIXI.Graphics {
 }
 
 export class PileTableau extends Pile {
-    constructor () {
-        super();
-        this._offset.y = 30;
-    }
-
     pop (card) {
         super.pop(card);
         if (this.last) {
@@ -136,6 +135,11 @@ export class PileTableau extends Pile {
         } else {
             return card.rank === 'K';
         }
+    }
+
+    resize (width, height) {
+        this._offset.y = 50 / CARD_HEIGHT * height;
+        super.resize(width, height);
     }
 
     _listen (card) {
@@ -186,7 +190,6 @@ export class PileStock extends Pile {
 
     push (card) {
         super.push(card);
-
         card.flipDown();
     }
 
@@ -217,10 +220,6 @@ export class PileStock extends Pile {
 }
 
 export class PileWaste extends Pile {
-    constructor () {
-        super();
-    }
-
     push (card) {
         if (this.last) {
             this.last.disable();
@@ -235,6 +234,17 @@ export class PileWaste extends Pile {
         if (this.last) {
             this.last.enableDrag();
         }
+    }
+
+    resize (width, height, type) {
+        if (type === 'horizontal') {
+            this._offset.x = 30 / CARD_HEIGHT * height;
+            this._offset.y = 0;
+        } else {
+            this._offset.x = 0;
+            this._offset.y = 50 / CARD_HEIGHT * height;
+        }
+        super.resize(width, height);
     }
 
     _tweenToTop () {
@@ -272,15 +282,5 @@ export class PileWaste extends Pile {
                 this._cards[i].y = this.y + this._offset.y * (max - (len - i));
             }
         }
-    }
-
-    setHorizontal () {
-        this._offset.x = 20;
-        this._offset.y = 0;
-    }
-
-    setVertical () {
-        this._offset.x = 0;
-        this._offset.y = 30;
     }
 }

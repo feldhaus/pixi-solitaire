@@ -2,7 +2,7 @@ import * as PIXI from 'pixi.js';
 
 import { Deck } from './deck';
 import { PileTableau, PileFoundation, PileStock, PileWaste } from './pile';
-import { CARD_WIDTH, CARD_HEIGHT } from './card';
+import { Layout } from './layout';
 
 const TABLEAU = 7;
 const FOUNDATION = 4;
@@ -10,14 +10,14 @@ const FOUNDATION = 4;
 export class Game {
     constructor (width, height) {
         // instantiate app
-        this._app = new PIXI.Application(width, height, { backgroundColor: 0x46963c, antialias: true });
+        this._app = new PIXI.Application(width, height, {
+            backgroundColor: 0x46963c,
+            antialias: true
+        });
         document.body.appendChild(this._app.view);
 
         // game is loaded
         this._loaded = false;
-
-        // space between cards
-        this._cardSpace = new PIXI.Point(CARD_WIDTH, CARD_HEIGHT);
 
         // init a deck
         this._deck = new Deck();
@@ -46,7 +46,7 @@ export class Game {
     _onAssetsLoaded () {
         this._setup();
         this._layout();
-        this._deal();
+        this._draw();
         this._loaded = true;
     }
 
@@ -64,12 +64,12 @@ export class Game {
         this._app.stage.addChildAt(this._waste, 0);
 
         // add foundation piles
-        this._foundation.forEach((pile, index) => {
+        this._foundation.forEach(pile => {
             this._app.stage.addChildAt(pile, 0);
         });
 
         // add tableu piles
-        this._tableau.forEach((pile, index) => {
+        this._tableau.forEach(pile => {
             this._app.stage.addChildAt(pile, 0);
         });
     }
@@ -83,84 +83,72 @@ export class Game {
     }
 
     _landscapeMode () {
-        const COLS = 9;
-        const ROWS = 4;
+        Layout.landscapeMode(this.width, this.height);
 
-        const newHeight = this.height / ROWS;
-        const maxHeight = newHeight * 0.8;
-        const maxWidth = CARD_WIDTH * maxHeight / CARD_HEIGHT;
-        const margin = new PIXI.Point(
-            (this.width - maxWidth * COLS) / COLS,
-            newHeight * 0.2
-        );
-
-        this._cardSpace.x = maxWidth + margin.x;
-        this._cardSpace.y = maxHeight + margin.y;
-
-        this._stock.resize(maxWidth, maxHeight);
-        this._stock.x = margin.x / 2;
-        this._stock.y = margin.y / 2;
-
-        this._waste.x = margin.x / 2;
-        this._waste.y = margin.y / 2 + this._cardSpace.y;
-        this._waste.setVertical();
-        this._waste.resize(maxWidth, maxHeight);
-
-        this._foundation.forEach((pile, index) => {
-            pile.resize(maxWidth, maxHeight);
-            pile.x = margin.x / 2 + (COLS - 1) * this._cardSpace.x;
-            pile.y = margin.y / 2 + index * this._cardSpace.y;
-        });
-
-        this._tableau.forEach((pile, index) => {
-            pile.resize(maxWidth, maxHeight);
-            pile.x = margin.x / 2 + (index + 1) * this._cardSpace.x;
-            pile.y = margin.y / 2;
-        });
-
+        // resize all cards
         this._deck.cards.forEach(card => {
-            card.resize(maxWidth, maxHeight);
+            card.resize(Layout.cardSize.x, Layout.cardSize.y);
+        });
+
+        // position and resize stock pile
+        this._stock.resize(Layout.cardSize.x, Layout.cardSize.y);
+        this._stock.x = Layout.padding.x;
+        this._stock.y = Layout.padding.y;
+
+        // position and resize waste pile
+        this._waste.resize(Layout.cardSize.x, Layout.cardSize.y, 'vertical');
+        this._waste.x = Layout.padding.x;
+        this._waste.y = Layout.padding.y + Layout.cardArea.y;
+
+        // position and resize foundation piles
+        this._foundation.forEach((pile, index) => {
+            pile.resize(Layout.cardSize.x, Layout.cardSize.y);
+            pile.x = Layout.padding.x + (Layout.cols - 1) * Layout.cardArea.x;
+            pile.y = Layout.padding.y + index * Layout.cardArea.y;
+        });
+
+        // position and resize tableau piles
+        this._tableau.forEach((pile, index) => {
+            pile.resize(Layout.cardSize.x, Layout.cardSize.y);
+            pile.x = Layout.padding.x + (index + 1) * Layout.cardArea.x;
+            pile.y = Layout.padding.y;
         });
     }
 
     _portraidMode () {
-        const COLS = 7;
+        Layout.portraidMode(this.width, this.height);
 
-        const newWidth = this.width / COLS;
-        const margin = newWidth * 0.2;
-        const maxWidth = newWidth * 0.8;
-        const maxHeight = CARD_HEIGHT * maxWidth / CARD_WIDTH;
-
-        this._cardSpace.x = maxWidth + margin;
-        this._cardSpace.y = maxHeight + margin;
-
-        this._stock.resize(maxWidth, maxHeight);
-        this._stock.x = margin / 2;
-        this._stock.y = margin / 2;
-
-        this._waste.x = margin / 2 + this._cardSpace.x;
-        this._waste.y = margin / 2;
-        this._waste.setHorizontal();
-        this._waste.resize(maxWidth, maxHeight);
-        
-        this._foundation.forEach((pile, index) => {
-            pile.resize(maxWidth, maxHeight);
-            pile.x = margin / 2 + (3 + index) * this._cardSpace.x;
-            pile.y = margin / 2;
-        });
-
-        this._tableau.forEach((pile, index) => {
-            pile.resize(maxWidth, maxHeight);
-            pile.x = margin / 2 + index * this._cardSpace.x;
-            pile.y = margin / 2 + maxHeight + margin;
-        });
-
+        // resize all cards
         this._deck.cards.forEach(card => {
-            card.resize(maxWidth, maxHeight);
+            card.resize(Layout.cardSize.x, Layout.cardSize.y);
+        });
+
+        // position and resize stock pile
+        this._stock.resize(Layout.cardSize.x, Layout.cardSize.y);
+        this._stock.x = Layout.padding.x;
+        this._stock.y = Layout.padding.y;
+
+        // position and resize waste pile
+        this._waste.resize(Layout.cardSize.x, Layout.cardSize.y, 'horizontal');
+        this._waste.x = Layout.padding.x + Layout.cardArea.x;
+        this._waste.y = Layout.padding.y;
+
+        // position and resize foundation piles
+        this._foundation.forEach((pile, index) => {
+            pile.resize(Layout.cardSize.x, Layout.cardSize.y);
+            pile.x = Layout.padding.x + (3 + index) * Layout.cardArea.x;
+            pile.y = Layout.padding.y;
+        });
+
+        // position and resize tableau piles
+        this._tableau.forEach((pile, index) => {
+            pile.resize(Layout.cardSize.x, Layout.cardSize.y);
+            pile.x = Layout.padding.x + index * Layout.cardArea.x;
+            pile.y = Layout.padding.y + Layout.cardArea.y;
         });
     }
 
-    _deal () {
+    _draw () {
         // shuffle the deck
         this._deck.shuffle(780);
 
@@ -171,17 +159,16 @@ export class Game {
             card.on('pointertap', this._onTapCard, this);
         });
 
-        // deal the cards on the tableau
+        // draw cards on the tableau
         let ix = 0;
-        for (let i = 0; i < TABLEAU; i++) {
-            for (let j = 0; j < i+1; j++) {
-                this._tableau[i].push(this._deck.cards[ix]);
-                ix++;
+        this._tableau.forEach((pile, index) => {
+            for (let i = 0; i < index + 1; i++) {
+                pile.push(this._deck.cards[ix++]);
             }
-            this._tableau[i].last.enableDrag();
-        }
+            pile.last.enableDrag();
+        });
 
-        // add remaining card on stock
+        // add remaining card to stock
         for (ix; ix < this._deck.cards.length; ix++) {
             this._stock.push(this._deck.cards[ix]);
         }
@@ -211,7 +198,7 @@ export class Game {
         const pile = this._hitTest(card);
 
         if (pile) {
-            pile.debug(true);
+            pile.highlight(true);
         }
     }
 
@@ -226,10 +213,9 @@ export class Game {
             return;
         }
 
-        let pile;
         if (card.pile instanceof PileWaste || card.pile instanceof PileTableau) {
             for (let i = 0; i < FOUNDATION; i++) {
-                pile = this._foundation[i];
+                const pile = this._foundation[i];
                 if (card.pile !== pile && pile.handle(card)) {
                     card.pile.pop(card);
                     pile.push(card);
@@ -241,14 +227,14 @@ export class Game {
         }
 
         for (let i = 0; i < TABLEAU; i++) {
-            pile = this._tableau[i];
+            const pile = this._tableau[i];
             if (card.pile !== pile && pile.handle(card)) {
                 card.pile.pop(card);
                 pile.push(card);
                 event.stopPropagation();
                 return; 
             }
-        }
+        };
     }
 
     _onTapStock (event) {
@@ -268,28 +254,29 @@ export class Game {
     }
 
     _hitTest (card) {
+        this._foundation.forEach(pile => {
+            pile.highlight(false);
+        });
+
+        this._tableau.forEach(pile => {
+            pile.highlight(false);
+        });
+
+        let col, row;
+
         for (let i = 0; i < FOUNDATION; i++) {
-            this._foundation[i].debug(false);
-        }
-
-        for (let i = 0; i < TABLEAU; i++) {
-            this._tableau[i].debug(false);
-        }
-
-        let col = Math.round((card.x - this._foundation[0].x) / this._cardSpace.x);
-        let row = Math.round((card.y - this._foundation[0].y) / this._cardSpace.y);
-
-        if (col > -1 && col < FOUNDATION && row === 0) {
-            return this._foundation[col];
-        } else {
-            col = Math.round((card.x - this._tableau[0].x) / this._cardSpace.x);
-            row = Math.round((card.y - this._tableau[0].y) / this._cardSpace.y);
-            if (col > -1 && col < TABLEAU && row > -1) {
-                return this._tableau[col];
+            col = Math.round((card.x - this._foundation[i].x) / Layout.cardArea.x);
+            row = Math.round((card.y - this._foundation[i].y) / Layout.cardArea.y);
+            if (col === 0 && row === 0) {
+                return this._foundation[i];
             }
         }
 
-        return;
+        col = Math.round((card.x - this._tableau[0].x) / Layout.cardArea.x);
+        row = Math.round((card.y - this._tableau[0].y) / Layout.cardArea.y);
+        if (col >= 0 && col < TABLEAU && row >= 0) {
+            return this._tableau[col];
+        }
     }
 
     _checkVictory () {
