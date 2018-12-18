@@ -48,6 +48,14 @@ export class Pile extends PIXI.Container {
 
     handle (card) {}
 
+    indexOf (card) {
+        return this._cards.indexOf(card);
+    }
+
+    getCardByIndex (index) {
+        return this._cards[index];
+    }
+
     highlight (visible) {
         this._highlight.visible = visible;
     }
@@ -89,24 +97,6 @@ export class Pile extends PIXI.Container {
 
     _unlisten (card) {}
 
-    set x (value) {
-        this.position.x = value;
-        this._arrange();
-    }
-
-    get x () {
-        return this.position.x;
-    }
-
-    set y (value) {
-        this.position.y = value;
-        this._arrange();
-    }
-
-    get y () {
-        return this.position.y;
-    }
-
     get length () {
         return this._cards.length;
     }
@@ -138,7 +128,7 @@ export class PileTableau extends Pile {
     }
 
     resize (width, height) {
-        this._offset.y = 50 / CARD_HEIGHT * height;
+        this._offset.y = 35 / CARD_HEIGHT * height;
         super.resize(width, height);
     }
 
