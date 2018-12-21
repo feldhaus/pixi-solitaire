@@ -20,8 +20,8 @@ export class Game {
         });
         document.body.appendChild(this._app.view);
 
-        // game is loaded
-        this._loaded = false;
+        // loader
+        this._loader = PIXI.loader.add('cards', './assets/cards.json');
 
         // instantiate bars and setup
         this._barL = new PIXI.Sprite(PIXI.Texture.WHITE);
@@ -58,25 +58,32 @@ export class Game {
     }
 
     load () {
-        PIXI.loader
-            .add('cards', './assets/cards.json')
-            .load(this._onAssetsLoaded.bind(this));
+        this._loader.load();
+    }
+
+    start () {
+        this._setup();
+        this._layout();
+        this._draw();
+
+        this._timerId = setInterval(() => {
+            this._timer++;
+            const array = [
+                Math.floor(this._timer / 3600),
+                ('0' + (Math.floor(this._timer / 60) % 60)).slice(-2),
+                ('0' + (this._timer % 60)).slice(-2)
+            ]
+            this._txtTimer.text = array.join(':');
+        }, 1000);
+    }
+
+    stop () {
+        clearInterval(this._timerId);
     }
 
     resize (width, height) {
         this._app.renderer.resize(width, height);
-
-        if (this._loaded) {
-            this._layout();
-        }
-    }
-
-    _onAssetsLoaded () {
-        this._loaded = true;
-        this._setup();
         this._layout();
-        this._draw();
-        this._start();
     }
 
     _setup () {
@@ -251,22 +258,6 @@ export class Game {
         this._stock.on('tap', this._onTapStock, this);
     }
 
-    _start () {
-        this._timerId = setInterval(() => {
-            this._timer++;
-            const array = [
-                Math.floor(this._timer / 3600),
-                ('0' + (Math.floor(this._timer / 60) % 60)).slice(-2),
-                ('0' + (this._timer % 60)).slice(-2)
-            ]
-            this._txtTimer.text = array.join(':');
-        }, 1000);
-    }
-
-    _stop () {
-        clearInterval(this._timerId);
-    }
-
     _onDragStop (event) {
         const card = event.currentTarget;
         const pile = this._hitTest(card);
@@ -397,7 +388,7 @@ export class Game {
         }, 0);
         if (sum === FOUNDATION) {
             console.log('WIN');
-            this._stop();
+            this.stop();
         }
     }
 
@@ -412,25 +403,41 @@ export class Game {
     get ratio () {
         return this.width / this.height;
     }
+
+    get loader () {
+        return this._loader;
+    }
 }
 
 window.onload = () => {
     // instantiate a game
     const game = new Game(window.innerWidth, window.innerHeight);
 
-    // load game
+    // load assets
     game.load();
 
-    // when resize window wait 500 miliseconds until resize the game
-    let timeoutId = null;
-    window.addEventListener('resize', () => {
-        if (timeoutId) {
-            clearTimeout(timeoutId);
-        }
-
-        timeoutId = setTimeout(() => {
-            game.resize(window.innerWidth, window.innerHeight)
-            timeoutId = null;
-        }, 500);
+    // called once per loaded/errored file
+    game.loader.onProgress.add(() => {
+        console.log(game.loader.progress);
     });
-}
+
+    // called once when the queued resources all load
+    game.loader.onComplete.add(() => {
+        game.start();
+
+        // when resize window wait 500 miliseconds until resize the game
+        let timeoutId = null;
+        window.addEventListener('resize', () => {
+            if (timeoutId) {
+                clearTimeout(timeoutId);
+            }
+
+            timeoutId = setTimeout(() => {
+                if (game) {
+                    game.resize(window.innerWidth, window.innerHeight)
+                    timeoutId = null;
+                }
+            }, 500);
+        });
+    });
+};
