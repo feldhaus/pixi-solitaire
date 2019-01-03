@@ -6,17 +6,19 @@ import { Layout } from './layout';
 
 const TABLEAU = 7;
 const FOUNDATION = 4;
-
 const HUD_HEIGHT = 60;
-
-const FONT_STYLE = {fontSize: 24, fontFamily: 'Courier New', fill: 0xffffff};
+const FONT_STYLE = {
+    fontSize: 24,
+    fontFamily: 'Courier New',
+    fill: 0xffffff
+};
 
 export class Game {
     constructor (width, height) {
         // instantiate app
         this._app = new PIXI.Application(width, height, {
             backgroundColor: 0x46963c,
-            antialias: true
+            antialias: true,
         });
         document.body.appendChild(this._app.view);
 
@@ -58,27 +60,44 @@ export class Game {
     }
 
     load () {
+        this._loader.onComplete.add(this._setup.bind(this));
+        this._loader.onComplete.add(this._layout.bind(this));
         this._loader.load();
     }
 
-    start () {
-        this._setup();
-        this._layout();
-        this._draw();
+    start (seed) {
+        if (isNaN(seed)) {
+            seed = Math.floor(Math.random() * Number.MAX_SAFE_INTEGER);
+        }
 
-        this._timerId = setInterval(() => {
-            this._timer++;
-            const array = [
-                Math.floor(this._timer / 3600),
-                ('0' + (Math.floor(this._timer / 60) % 60)).slice(-2),
-                ('0' + (this._timer % 60)).slice(-2)
-            ]
-            this._txtTimer.text = array.join(':');
-        }, 1000);
+        // shuffle the deck
+        this._deck.shuffle(seed);
+
+        this.restart();
     }
 
     stop () {
         clearInterval(this._timerId);
+    }
+
+    restart () {
+        this.stop();
+
+        // remove cards from piles
+        this._stock.removeAll();
+        this._waste.removeAll();
+        this._tableau.forEach(pile => { pile.removeAll(); });
+        this._foundation.forEach(pile => { pile.removeAll(); });
+
+        // draw cards
+        this._draw();
+
+        // reset score
+        this._score = 0;
+        this._updateScore();
+
+        // start count up
+        this._startTimer();
     }
 
     resize (width, height) {
@@ -89,6 +108,7 @@ export class Game {
     _setup () {
         // add stock pile
         this._app.stage.addChild(this._stock);
+        this._stock.on('pointertap', this._onTapStock, this);
 
         // add waste pile
         this._app.stage.addChild(this._waste);
@@ -107,6 +127,9 @@ export class Game {
         this._deck.create();
         this._deck.cards.forEach(card => {
             this._app.stage.addChild(card);
+            card.on('dragstop', this._onDragStop, this);
+            card.on('dragmove', this._onDragMove, this);
+            card.on('pointertap', this._onTapCard, this);
         });
 
         // add bars
@@ -114,7 +137,7 @@ export class Game {
         this._app.stage.addChildAt(this._barR, 0);
         this._app.stage.addChildAt(this._barT, 0);
 
-        // TODO
+        // add HUD
         this._app.stage.addChild(this._txtTimer);
         this._app.stage.addChild(this._txtScore);
     }
@@ -126,9 +149,9 @@ export class Game {
             this._portraidMode();
         }
 
-        // TODO
-        this._txtTimer.x = this.width / 2 - 50;
-        this._txtScore.x = this.width / 2 + 50;
+        // position HUD values
+        this._txtTimer.x = this.width / 2 - 10;
+        this._txtScore.x = this.width / 2 + 10;
     }
 
     _landscapeMode () {
@@ -231,21 +254,12 @@ export class Game {
     }
 
     _draw () {
-        // shuffle the deck
-        this._deck.shuffle(780);
-
-        // listen to when any card is dropped
-        this._deck.cards.forEach(card => {
-            card.on('dragstop', this._onDragStop, this);
-            card.on('dragmove', this._onDragMove, this);
-            card.on('pointertap', this._onTapCard, this);
-        });
-
         // draw cards on the tableau
         let ix = 0;
         this._tableau.forEach((pile, index) => {
             for (let i = 0; i < index + 1; i++) {
                 pile.push(this._deck.cards[ix++]);
+                pile.last.disableDrag();
             }
             pile.last.enableDrag();
         });
@@ -253,9 +267,8 @@ export class Game {
         // add remaining card to stock
         for (ix; ix < this._deck.cards.length; ix++) {
             this._stock.push(this._deck.cards[ix]);
+            this._stock.last.disableDrag();
         }
-        this._stock.last.enable();
-        this._stock.on('tap', this._onTapStock, this);
     }
 
     _onDragStop (event) {
@@ -317,7 +330,7 @@ export class Game {
     _onTapStock (event) {
         let card;
         if (this._stock.last) {
-            card = event.target;
+            card = this._stock.last;
             this._stock.pop(card);
             this._waste.push(card);
         } else {
@@ -379,6 +392,29 @@ export class Game {
 
     _addScore (score) {
         this._score = Math.max(0, this._score + score);
+        this._updateScore();
+    }
+
+    _startTimer () {
+        // reset timer and score
+        this._timer = 0;
+        this._updateTimer();
+
+        // start count up
+        this._timerId = setInterval(() => {
+            this._timer++;
+            this._updateTimer();
+        }, 1000);
+    }
+
+    _updateTimer () {
+        const h = Math.floor(this._timer / 3600);
+        const m = ('0' + (Math.floor(this._timer / 60) % 60)).slice(-2);
+        const s = ('0' + (this._timer % 60)).slice(-2);
+        this._txtTimer.text = `${h}:${m}:${s}`;
+    }
+
+    _updateScore () {
         this._txtScore.text = 'SCORE: ' + ('000' + this._score).slice(-3);
     }
 
@@ -408,36 +444,3 @@ export class Game {
         return this._loader;
     }
 }
-
-window.onload = () => {
-    // instantiate a game
-    const game = new Game(window.innerWidth, window.innerHeight);
-
-    // load assets
-    game.load();
-
-    // called once per loaded/errored file
-    game.loader.onProgress.add(() => {
-        console.log(game.loader.progress);
-    });
-
-    // called once when the queued resources all load
-    game.loader.onComplete.add(() => {
-        game.start();
-
-        // when resize window wait 500 miliseconds until resize the game
-        let timeoutId = null;
-        window.addEventListener('resize', () => {
-            if (timeoutId) {
-                clearTimeout(timeoutId);
-            }
-
-            timeoutId = setTimeout(() => {
-                if (game) {
-                    game.resize(window.innerWidth, window.innerHeight)
-                    timeoutId = null;
-                }
-            }, 500);
-        });
-    });
-};
