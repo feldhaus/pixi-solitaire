@@ -9,5 +9,63 @@
 </head>
 <body>
     <script src="bundle.js"></script>
+    <script type="text/javascript">
+      let game = null;
+      let timeoutId = null;
+
+      window.onload = () => {
+        // instantiate a game
+        game = new Bundle.Game(window.innerWidth, window.innerHeight);
+
+        // load assets
+        game.load();
+
+        // called once per loaded/errored file
+        game.loader.onProgress.add(() => {
+          console.log('%', game.loader.progress);
+        });
+
+        // called once when the queued resources all load
+        game.loader.onComplete.add(() => {
+          const urlParams = new URLSearchParams(window.location.search);
+          const seed = parseInt(urlParams.get('seed'));
+          game.start(seed);
+        });
+      }
+
+      window.onresize = () => {
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+        }
+
+        timeoutId = setTimeout(() => {
+          if (game) {
+            game.resize(window.innerWidth, window.innerHeight)
+            timeoutId = null;
+          }
+        }, 500);
+      }
+
+      window.onkeydown = (event) => {
+        const code = event.which || event.keyCode;
+        switch (code) {
+          case 82:
+            game.restart();
+            break;
+          case 78:
+            game.start();
+            break;
+        }
+      }
+
+      function getUrlParameter(name) {
+        name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+        var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+        var results = regex.exec(location.search);
+        if (results === null) {
+          return decodeURIComponent(results[1].replace(/\+/g, ' '));
+        }
+      };
+    </script>
 </body>
 </html>

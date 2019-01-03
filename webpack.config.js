@@ -15,6 +15,7 @@ const COMMON = {
     path: OUTPUT_PATH,
     publicPath: PUBLIC_PATH,
     filename: 'bundle.js',
+    library: 'Bundle'
   },
   module: {
     rules: [
