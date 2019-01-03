@@ -102,6 +102,16 @@ export class Card extends PIXI.Container {
             .on('pointermove', this._onDragMove, this);
     }
 
+    disableDrag () {
+        this.disable();
+        this.flipDown();
+        this
+            .off('pointerdown', this._onDragStart, this)
+            .off('pointerup', this._onDragStop, this)
+            .off('pointerupoutside', this._onDragStop, this)
+            .off('pointermove', this._onDragMove, this);
+    }
+
     cancel () {
         this.move(this._dragStartPosition.x, this._dragStartPosition.y);
     }
