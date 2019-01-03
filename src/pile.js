@@ -31,15 +31,26 @@ export class Pile extends PIXI.Container {
         while (card);
     }
 
+    removeAll () {
+        for (let i = this._cards.length - 1; i >= 0; i--) {
+            this._unlisten(this._cards[i]);
+            this._cards[i].pile = null;
+            this._cards[i].tail = null;
+        }
+        this._cards = [];
+    }
+
     pop (card) {
         if (card) {
-            let removedCards = this._cards.splice(this._cards.indexOf(card));
+            const removedCards = this._cards.splice(this._cards.indexOf(card));
             for (let i = 0; i < removedCards.length; i++) {
                 this._unlisten(removedCards[i]);
+                removedCards[i].pile = null;
             }
         } else {
             card = this._cards.pop();
             this._unlisten(card);
+            card.pile = null;
         }
         if (this.last) {
             this.last.tail = null;
@@ -170,6 +181,9 @@ export class PileStock extends Pile {
     constructor () {
         super();
 
+        this.interactive = true;
+        this.buttonMode = true;
+
         this._offset.x = 0.2;
         this._offset.y = 0.2;
         
@@ -180,32 +194,13 @@ export class PileStock extends Pile {
 
     push (card) {
         super.push(card);
-        card.flipDown();
-    }
-
-    pop (card) {
-        super.pop(card);
-        if (this.last) {
-            this.last.enable();
-        } else {
-            this._area.interactive = true;
-            this._area.buttonMode = true;
-            this._area.once('pointertap', this._onTap, this);
-        }
+        card.disableDrag();
     }
 
     resize (width, height) {
         super.resize(width, height);
         this._area.width = width;
         this._area.height = height;
-    }
-
-    _listen (card) {
-        card.once('pointertap', this._onTap, this);
-    }
-
-    _onTap (event) {
-        this.emit('tap', event);
     }
 }
 
