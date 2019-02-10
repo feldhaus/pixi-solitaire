@@ -46,7 +46,7 @@ export class Deck {
     }
 
     _random () {
-        const x = Math.sin(this._seed++) * Number.MAX_SAFE_INTEGER;
+        const x = Math.sin(this._seed++) * 10000;
         return x - Math.floor(x);
     }
 

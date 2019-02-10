@@ -36,7 +36,7 @@ export class Card extends PIXI.Container {
 
         // load the back card texture just once
         if (Card.backTexture === undefined) {
-            Card.backTexture = PIXI.Texture.fromFrame('cardBack_blue4.png');
+            Card.backTexture = PIXI.Texture.from('cardBack_blue4.png');
         }
 
         // create and add back sprite
@@ -44,8 +44,8 @@ export class Card extends PIXI.Container {
         this.addChild(this._back);
 
         // create and add front sprite
-        let frame = ['card', this._suit, this._rank, '.png'].join('');
-        this._front = new PIXI.Sprite.fromFrame(frame);
+        const frame = ['card', this._suit, this._rank, '.png'].join('');
+        this._front = new PIXI.Sprite.from(frame);
         this._front.visible = false;
         this.addChild(this._front);
     }

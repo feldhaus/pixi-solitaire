@@ -1,4 +1,5 @@
 import * as PIXI from 'pixi.js';
+import Signal from 'mini-signals';
 
 import { Deck } from './deck';
 import { PileTableau, PileFoundation, PileStock, PileWaste } from './pile';
@@ -8,7 +9,7 @@ const TABLEAU = 7;
 const FOUNDATION = 4;
 const HUD_HEIGHT = 60;
 const FONT_STYLE = {
-    fontSize: 24,
+    fontSize: 20,
     fontFamily: 'Courier New',
     fill: 0xffffff
 };
@@ -57,6 +58,11 @@ export class Game {
         this._txtScore = new PIXI.Text('SCORE: 000', FONT_STYLE);
         this._txtScore.anchor.set(0, 0.5);
         this._txtScore.y = HUD_HEIGHT / 2;
+
+        // new game button
+        this._btnNew = new PIXI.Text('NEW GAME', FONT_STYLE);
+        this._btnNew.anchor.set(1, 1);
+        this.onStart = new Signal();
     }
 
     load () {
@@ -140,6 +146,14 @@ export class Game {
         // add HUD
         this._app.stage.addChild(this._txtTimer);
         this._app.stage.addChild(this._txtScore);
+
+        // add new game button
+        this._app.stage.addChild(this._btnNew);
+        this._btnNew.interactive = true;
+        this._btnNew.buttonMode = true;
+        this._btnNew.on('pointerup', () => {
+            this.onStart.dispatch(this);
+        });
     }
 
     _layout () {
@@ -204,6 +218,12 @@ export class Game {
         this._barR.height = this.height;
         this._barT.width = this.width;
         this._barT.height = HUD_HEIGHT;
+
+        // position button new game
+        this._btnNew.position.set(
+            this.width - this._barR.width - 10,
+            this.height - 10
+        );
     }
 
     _portraidMode () {
@@ -251,6 +271,9 @@ export class Game {
         this._barR.visible = false;
         this._barT.width = this.width;
         this._barT.height = HUD_HEIGHT;
+
+        // position button new game
+        this._btnNew.position.set(this.width - 10, this.height - 10);
     }
 
     _draw () {
