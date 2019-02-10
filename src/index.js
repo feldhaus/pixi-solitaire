@@ -227,7 +227,7 @@ export class Game {
     }
 
     _portraidMode () {
-        Layout.portraidMode(this.width, this.height - HUD_HEIGHT);
+        Layout.portraidMode(this.width);
 
         // resize all cards
         this._deck.cards.forEach(card => {
@@ -347,10 +347,10 @@ export class Game {
                 this._match(card, pile);
                 return; 
             }
-        };
+        }
     }
 
-    _onTapStock (event) {
+    _onTapStock () {
         let card;
         if (this._stock.last) {
             card = this._stock.last;
@@ -443,9 +443,10 @@ export class Game {
 
     _checkVictory () {
         const sum = this._foundation.reduce((a, c) => {
-            return a + ((c.last && c.last.rank === 'K') ? 1 : 0)
+            return a + ((c.last && c.last.rank === 'K') ? 1 : 0);
         }, 0);
         if (sum === FOUNDATION) {
+            // eslint-disable-next-line no-console
             console.log('WIN');
             this.stop();
         }

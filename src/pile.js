@@ -49,7 +49,7 @@ export class Pile extends PIXI.Container {
             }
         } else {
             card = this._cards.pop();
-            this._unlisten(card);
+            this._unlisten();
             card.pile = null;
         }
         if (this.last) {
@@ -57,6 +57,7 @@ export class Pile extends PIXI.Container {
         }
     }
 
+    // eslint-disable-next-line no-unused-vars
     handle (card) {}
 
     indexOf (card) {
@@ -89,7 +90,7 @@ export class Pile extends PIXI.Container {
         const end = {
             x: this.x + this._offset.x * len,
             y: this.y + this._offset.y * len
-        }
+        };
         const dist = Math.sqrt(Math.pow(end.x - this.last.x, 2) + Math.pow(end.y - this.last.y, 2));
         TweenLite.to(this.last, dist / 1000, {x: end.x, y: end.y});
     }
@@ -104,9 +105,10 @@ export class Pile extends PIXI.Container {
         }
     }
 
+    // eslint-disable-next-line no-unused-vars
     _listen (card) {}
 
-    _unlisten (card) {}
+    _unlisten () {}
 
     get length () {
         return this._cards.length;

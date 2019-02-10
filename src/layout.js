@@ -24,7 +24,7 @@ export class Layout {
         Layout.cardArea.y = Layout.cardSize.y + Layout.margin.y;
     }
 
-    static portraidMode (width, height) {
+    static portraidMode (width) {
         this.cols = PORTRAID_COLS;
 
         const newWidth = width / this.cols;

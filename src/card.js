@@ -9,7 +9,7 @@ export const UNICODE = {
     'Diamonds': '♦',
     'Hearts':   '♥',
     'Spades':   '♠'
-}
+};
 export const CARD_WIDTH = 140;
 export const CARD_HEIGHT = 190;
 
