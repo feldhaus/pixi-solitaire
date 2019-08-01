@@ -1,4 +1,5 @@
 import { Card, SUITS, RANKS } from './card';
+import seedrandom from 'seedrandom';
 
 export class Deck {
     constructor () {
@@ -21,9 +22,10 @@ export class Deck {
     shuffle (seed) {
         if (isNaN(seed)) {
             seed = this._seed;
-        } else {
-            this._seed = seed;
         }
+
+        this._seed = seed;
+        const rng = seedrandom(this._seed);
 
         let currentIndex = this._cards.length;
         let temporaryValue, randomIndex;
@@ -33,7 +35,7 @@ export class Deck {
 
         while (currentIndex > 0) {
             // get a random card
-            randomIndex = Math.floor(this._random() * currentIndex);
+            randomIndex = Math.floor(rng() * currentIndex);
             currentIndex -= 1;
 
             // and swap it with the current element
@@ -41,13 +43,6 @@ export class Deck {
             this._shuffled[currentIndex] = this._shuffled[randomIndex];
             this._shuffled[randomIndex] = temporaryValue;
         }
-
-        this._seed = seed;
-    }
-
-    _random () {
-        const x = Math.sin(this._seed++) * 10000;
-        return x - Math.floor(x);
     }
 
     get cards () {
