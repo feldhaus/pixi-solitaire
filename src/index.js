@@ -26,6 +26,9 @@ export class Game {
         // loader
         this._loader = PIXI.loader.add('cards', './assets/cards.json');
 
+        // add start signal
+        this.onStart = new Signal();
+
         // instantiate bars and setup
         this._barL = new PIXI.Sprite(PIXI.Texture.WHITE);
         this._barL.tint = 0x333333;
@@ -59,10 +62,12 @@ export class Game {
         this._txtScore.anchor.set(0, 0.5);
         this._txtScore.y = HUD_HEIGHT / 2;
 
-        // new game button
-        this._btnNew = new PIXI.Text('NEW GAME', FONT_STYLE);
+        // buttons
+        this._btnRestart = new PIXI.Text('RESTART (R)', FONT_STYLE);
+        this._btnRestart.anchor.set(0, 1);
+
+        this._btnNew = new PIXI.Text('NEW GAME (N)', FONT_STYLE);
         this._btnNew.anchor.set(1, 1);
-        this.onStart = new Signal();
     }
 
     load () {
@@ -147,13 +152,16 @@ export class Game {
         this._app.stage.addChild(this._txtTimer);
         this._app.stage.addChild(this._txtScore);
 
-        // add new game button
+        // add buttons
+        this._app.stage.addChild(this._btnRestart);
+        this._btnRestart.interactive = true;
+        this._btnRestart.buttonMode = true;
+        this._btnRestart.on('pointerup', this.restart.bind(this));
+
         this._app.stage.addChild(this._btnNew);
         this._btnNew.interactive = true;
         this._btnNew.buttonMode = true;
-        this._btnNew.on('pointerup', () => {
-            this.onStart.dispatch(this);
-        });
+        this._btnNew.on('pointerup', this.start.bind(this));
     }
 
     _layout () {
@@ -219,7 +227,11 @@ export class Game {
         this._barT.width = this.width;
         this._barT.height = HUD_HEIGHT;
 
-        // position button new game
+        // position buttons
+        this._btnRestart.position.set(
+            this._barL.width + 10,
+            this.height - 10
+        );
         this._btnNew.position.set(
             this.width - this._barR.width - 10,
             this.height - 10
@@ -272,7 +284,8 @@ export class Game {
         this._barT.width = this.width;
         this._barT.height = HUD_HEIGHT;
 
-        // position button new game
+        // position buttons
+        this._btnRestart.position.set(10, this.height - 10);
         this._btnNew.position.set(this.width - 10, this.height - 10);
     }
 
