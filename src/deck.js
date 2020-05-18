@@ -1,51 +1,51 @@
-import { Card, SUITS, RANKS } from './card';
 import seedrandom from 'seedrandom';
+import { Card, SUITS, RANKS } from './card';
 
 export class Deck {
-    constructor () {
-        this._cards = [];
-        this._shuffled = [];
-        this._seed = 0;
+  constructor() {
+    this.defaultCards = [];
+    this.shuffledCards = [];
+    this.seed = 0;
+  }
+
+  create() {
+    SUITS.forEach((suit) => {
+      RANKS.forEach((rank) => {
+        this.defaultCards.push(new Card(suit, rank));
+      });
+    });
+
+    // clone cards array
+    this.shuffledCards = this.defaultCards.concat();
+  }
+
+  shuffle(seed) {
+    if (!Number.isNaN(seed)) {
+      this.seed = seed;
     }
 
-    create () {
-        SUITS.forEach(suit => {
-            RANKS.forEach(rank => {
-                this._cards.push(new Card(suit, rank));
-            });
-        });
+    const rng = seedrandom(this.seed);
 
-        // clone cards array
-        this._shuffled = this._cards.concat();
+    let currentIndex = this.defaultCards.length;
+    let temporaryValue; let
+      randomIndex;
+
+    // clone cards array
+    this.shuffledCards = this.defaultCards.concat();
+
+    while (currentIndex > 0) {
+      // get a random card
+      randomIndex = Math.floor(rng() * currentIndex);
+      currentIndex--;
+
+      // and swap it with the current element
+      temporaryValue = this.shuffledCards[currentIndex];
+      this.shuffledCards[currentIndex] = this.shuffledCards[randomIndex];
+      this.shuffledCards[randomIndex] = temporaryValue;
     }
+  }
 
-    shuffle (seed) {
-        if (isNaN(seed)) {
-            seed = this._seed;
-        }
-
-        this._seed = seed;
-        const rng = seedrandom(this._seed);
-
-        let currentIndex = this._cards.length;
-        let temporaryValue, randomIndex;
-
-        // clone cards array
-        this._shuffled = this._cards.concat();
-
-        while (currentIndex > 0) {
-            // get a random card
-            randomIndex = Math.floor(rng() * currentIndex);
-            currentIndex -= 1;
-
-            // and swap it with the current element
-            temporaryValue = this._shuffled[currentIndex];
-            this._shuffled[currentIndex] = this._shuffled[randomIndex];
-            this._shuffled[randomIndex] = temporaryValue;
-        }
-    }
-
-    get cards () {
-        return this._shuffled;
-    }
+  get cards() {
+    return this.shuffledCards;
+  }
 }
