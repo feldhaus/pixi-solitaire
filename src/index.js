@@ -25,6 +25,8 @@ export class Game {
       height,
       backgroundColor: 0x46963c,
       antialias: true,
+      resolution: devicePixelRatio,
+      autoDensity: true,
     });
     document.body.appendChild(this.app.view);
 
@@ -444,7 +446,7 @@ export class Game {
 
     // start count up
     this.timerId = setInterval(() => {
-      this.timei++;
+      this.timer++;
       this.updateTimer();
     }, 1000);
   }
@@ -473,11 +475,11 @@ export class Game {
   }
 
   get width() {
-    return this.app.renderer.width;
+    return this.app.renderer.width / this.app.renderer.resolution;
   }
 
   get height() {
-    return this.app.renderer.height;
+    return this.app.renderer.height / this.app.renderer.resolution;
   }
 
   get ratio() {
