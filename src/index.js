@@ -7,6 +7,7 @@ import {
   PileTableau, PileFoundation, PileStock, PileWaste,
 } from './pile';
 import { Layout } from './layout';
+import { Ranks } from './ranks';
 
 const TABLEAU = 7;
 const FOUNDATION = 4;
@@ -464,7 +465,7 @@ export class Game {
 
   checkVictory() {
     const sum = this.foundation.reduce(
-      (a, c) => a + (c.last && c.last.rank === 'K' ? 1 : 0),
+      (a, c) => a + (c.last && c.last.rank === Ranks.KING ? 1 : 0),
       0,
     );
     if (sum === FOUNDATION) {

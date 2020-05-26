@@ -1,17 +1,8 @@
 import {
   Container, Point, Sprite, Texture,
 } from 'pixi.js';
+import { Suits } from './suits';
 
-export const SUITS = ['Clubs', 'Diamonds', 'Hearts', 'Spades'];
-export const RANKS = [
-  'A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K',
-];
-export const UNICODE = {
-  Clubs: '♣',
-  Diamonds: '♦',
-  Hearts: '♥',
-  Spades: '♠',
-};
 export const CARD_WIDTH = 140;
 export const CARD_HEIGHT = 190;
 
@@ -23,7 +14,7 @@ export class Card extends Container {
     this.rank = rank;
 
     // color is based on suit: 0 - black / 1 - red
-    this.color = suit === 'Diamonds' || suit === 'Hearts';
+    this.color = suit === Suits.DIAMONDS || suit === Suits.HEARTS;
 
     this.faceUp = false;
     this.pile = null;
@@ -46,7 +37,7 @@ export class Card extends Container {
     this.addChild(this.back);
 
     // create and add front sprite
-    const frame = ['card', this.suit, this.rank, '.png'].join('');
+    const frame = ['card', this.suit.name, this.rank, '.png'].join('');
     // eslint-disable-next-line new-cap
     this.front = new Sprite.from(frame);
     this.front.visible = false;
@@ -98,8 +89,7 @@ export class Card extends Container {
   enableDrag() {
     this.enable();
     this.flipUp();
-    this
-      .on('pointerdown', this.onDragStart, this)
+    this.on('pointerdown', this.onDragStart, this)
       .on('pointerup', this.onDragStop, this)
       .on('pointerupoutside', this.onDragStop, this)
       .on('pointermove', this.onDragMove, this);
@@ -108,8 +98,7 @@ export class Card extends Container {
   disableDrag() {
     this.disable();
     this.flipDown();
-    this
-      .off('pointerdown', this.onDragStart, this)
+    this.off('pointerdown', this.onDragStart, this)
       .off('pointerup', this.onDragStop, this)
       .off('pointerupoutside', this.onDragStop, this)
       .off('pointermove', this.onDragMove, this);
@@ -120,7 +109,7 @@ export class Card extends Container {
   }
 
   toString() {
-    return this.rank + UNICODE[this.suit];
+    return this.rank + this.suit.unicode;
   }
 
   onDragStart(event) {
@@ -138,10 +127,7 @@ export class Card extends Container {
     if (this.isDragging) {
       this.moved = true;
       const position = event.data.getLocalPosition(this.parent);
-      this.move(
-        position.x - this.dragOffset.x,
-        position.y - this.dragOffset.y,
-      );
+      this.move(position.x - this.dragOffset.x, position.y - this.dragOffset.y);
       this.emit('dragmove', event);
     }
   }

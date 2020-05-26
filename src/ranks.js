@@ -1,0 +1,31 @@
+export const Ranks = Object.freeze({
+  ACE: 'A',
+  N2: '2',
+  N3: '3',
+  N4: '4',
+  N5: '5',
+  N6: '6',
+  N7: '7',
+  N8: '8',
+  N9: '9',
+  N10: '10',
+  JACK: 'J',
+  QUEEN: 'Q',
+  KING: 'K',
+});
+
+export const RANKS = [
+  Ranks.ACE,
+  Ranks.N2,
+  Ranks.N3,
+  Ranks.N4,
+  Ranks.N5,
+  Ranks.N6,
+  Ranks.N7,
+  Ranks.N8,
+  Ranks.N9,
+  Ranks.N10,
+  Ranks.JACK,
+  Ranks.QUEEN,
+  Ranks.KING,
+];

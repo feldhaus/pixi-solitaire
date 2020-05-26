@@ -1,5 +1,7 @@
 import seedrandom from 'seedrandom';
-import { Card, SUITS, RANKS } from './card';
+import { Card } from './card';
+import { SUITS } from './suits';
+import { RANKS } from './ranks';
 
 export class Deck {
   constructor() {

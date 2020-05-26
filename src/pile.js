@@ -3,7 +3,8 @@ import {
   Container, Graphics, Point, Sprite, Texture,
 } from 'pixi.js';
 import { TweenLite } from 'gsap';
-import { RANKS, CARD_HEIGHT } from './card';
+import { CARD_HEIGHT } from './card';
+import { Ranks, RANKS } from './ranks';
 
 export class Pile extends Container {
   constructor() {
@@ -141,7 +142,7 @@ export class PileTableau extends Pile {
       }
       return false;
     }
-    return card.rank === 'K';
+    return card.rank === Ranks.KING;
   }
 
   resize(width, height) {
@@ -176,7 +177,7 @@ export class PileFoundation extends Pile {
       }
       return false;
     }
-    return card.rank === 'A';
+    return card.rank === Ranks.ACE;
   }
 }
 
