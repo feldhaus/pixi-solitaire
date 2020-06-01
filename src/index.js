@@ -6,12 +6,11 @@ import { Deck } from './deck';
 import {
   PileTableau, PileFoundation, PileStock, PileWaste,
 } from './pile';
-import { Layout } from './layout';
 import { Ranks } from './ranks';
+import { HUD_HEIGHT, setupLayout } from './layout';
 
 const TABLEAU = 7;
 const FOUNDATION = 4;
-const HUD_HEIGHT = 60;
 const FONT_STYLE = {
   fontSize: 20,
   fontFamily: 'Courier New',
@@ -65,13 +64,13 @@ export class Game {
     this.timer = 0;
     this.txtTimer = new Text('0:00:00', FONT_STYLE);
     this.txtTimer.anchor.set(1, 0.5);
-    this.txtTimer.y = HUD_HEIGHT / 2;
+    this.txtTimer.y = HUD_HEIGHT * 0.5;
 
     // HUD score
     this.score = 0;
     this.txtScore = new Text('SCORE: 000', FONT_STYLE);
     this.txtScore.anchor.set(0, 0.5);
-    this.txtScore.y = HUD_HEIGHT / 2;
+    this.txtScore.y = HUD_HEIGHT * 0.5;
 
     // buttons
     this.btnRestart = new Text('RESTART (R)', FONT_STYLE);
@@ -180,119 +179,22 @@ export class Game {
   }
 
   layout() {
-    if (this.ratio > 1.6) {
-      this.landscapeMode();
-    } else {
-      this.portraidMode();
-    }
-
-    // position HUD values
-    this.txtTimer.x = this.width / 2 - 10;
-    this.txtScore.x = this.width / 2 + 10;
-  }
-
-  landscapeMode() {
-    Layout.landscapeMode(this.width, this.height - HUD_HEIGHT);
-
-    // resize all cards
-    this.deck.cards.forEach((card) => {
-      card.resize(Layout.cardSize.x, Layout.cardSize.y);
+    setupLayout({
+      width: this.width,
+      height: this.height,
+      deck: this.deck,
+      stock: this.stock,
+      waste: this.waste,
+      foundation: this.foundation,
+      tableau: this.tableau,
+      barLeft: this.barL,
+      barRight: this.barR,
+      barTop: this.barT,
+      btnRestart: this.btnRestart,
+      btnNew: this.btnNew,
+      txtTimer: this.txtTimer,
+      txtScore: this.txtScore,
     });
-
-    // position and resize stock pile
-    this.stock.position.set(Layout.padding.x, Layout.padding.y + HUD_HEIGHT);
-    this.stock.resize(Layout.cardSize.x, Layout.cardSize.y);
-
-    // position and resize waste pile
-    this.waste.position.set(
-      Layout.padding.x,
-      Layout.padding.y + Layout.cardArea.y + HUD_HEIGHT,
-    );
-    this.waste.resize(Layout.cardSize.x, Layout.cardSize.y, 'vertical');
-
-    // position and resize foundation piles
-    this.foundation.forEach((pile, index) => {
-      pile.position.set(
-        Layout.padding.x + (Layout.cols - 1) * Layout.cardArea.x,
-        Layout.padding.y + index * Layout.cardArea.y + HUD_HEIGHT,
-      );
-      pile.resize(Layout.cardSize.x, Layout.cardSize.y);
-    });
-
-    // position and resize tableau piles
-    this.tableau.forEach((pile, index) => {
-      pile.position.set(
-        Layout.padding.x + (index + 1) * Layout.cardArea.x,
-        Layout.padding.y + HUD_HEIGHT,
-      );
-      pile.resize(Layout.cardSize.x, Layout.cardSize.y);
-    });
-
-    // position, show and resize the bars
-    this.barL.visible = true;
-    this.barL.width = Layout.cardArea.x;
-    this.barL.height = this.height;
-    this.barR.visible = true;
-    this.barR.x = this.width;
-    this.barR.width = Layout.cardArea.x;
-    this.barR.height = this.height;
-    this.barT.width = this.width;
-    this.barT.height = HUD_HEIGHT;
-
-    // position buttons
-    this.btnRestart.position.set(this.barL.width + 10, this.height - 10);
-    this.btnNew.position.set(
-      this.width - this.barR.width - 10,
-      this.height - 10,
-    );
-  }
-
-  portraidMode() {
-    Layout.portraidMode(this.width);
-
-    // resize all cards
-    this.deck.cards.forEach((card) => {
-      card.resize(Layout.cardSize.x, Layout.cardSize.y);
-    });
-
-    // position and resize stock pile
-    this.stock.position.set(Layout.padding.x, Layout.padding.y + HUD_HEIGHT);
-    this.stock.resize(Layout.cardSize.x, Layout.cardSize.y);
-
-    // position and resize waste pile
-    this.waste.position.set(
-      Layout.padding.x + Layout.cardArea.x,
-      Layout.padding.y + HUD_HEIGHT,
-    );
-    this.waste.resize(Layout.cardSize.x, Layout.cardSize.y, 'horizontal');
-
-    // position and resize foundation piles
-    this.foundation.forEach((pile, index) => {
-      pile.position.set(
-        Layout.padding.x + (3 + index) * Layout.cardArea.x,
-        Layout.padding.y + HUD_HEIGHT,
-      );
-      pile.resize(Layout.cardSize.x, Layout.cardSize.y);
-    });
-
-    // position and resize tableau piles
-    this.tableau.forEach((pile, index) => {
-      pile.position.set(
-        Layout.padding.x + index * Layout.cardArea.x,
-        Layout.padding.y + Layout.cardArea.y + HUD_HEIGHT,
-      );
-      pile.resize(Layout.cardSize.x, Layout.cardSize.y);
-    });
-
-    // hide lateral bars and resize the top one
-    this.barL.visible = false;
-    this.barR.visible = false;
-    this.barT.width = this.width;
-    this.barT.height = HUD_HEIGHT;
-
-    // position buttons
-    this.btnRestart.position.set(10, this.height - 10);
-    this.btnNew.position.set(this.width - 10, this.height - 10);
   }
 
   draw() {
@@ -340,13 +242,8 @@ export class Game {
   onTapCard(event) {
     const card = event.currentTarget;
 
-    if (card.moved) {
-      return;
-    }
-
-    if (card.pile instanceof PileStock) {
-      return;
-    }
+    if (card.moved) return;
+    if (card.pile instanceof PileStock) return;
 
     if (card.pile instanceof PileWaste || card.pile instanceof PileTableau) {
       for (let i = 0; i < FOUNDATION; i++) {
@@ -399,15 +296,15 @@ export class Game {
     let row;
 
     for (let i = 0; i < FOUNDATION; i++) {
-      col = Math.round((card.x - this.foundation[i].x) / Layout.cardArea.x);
-      row = Math.round((card.y - this.foundation[i].y) / Layout.cardArea.y);
+      col = Math.round((card.x - this.foundation[i].x) / card.area.x);
+      row = Math.round((card.y - this.foundation[i].y) / card.area.y);
       if (col === 0 && row === 0) {
         return this.foundation[i];
       }
     }
 
-    col = Math.round((card.x - this.tableau[0].x) / Layout.cardArea.x);
-    row = Math.round((card.y - this.tableau[0].y) / Layout.cardArea.y);
+    col = Math.round((card.x - this.tableau[0].x) / card.area.x);
+    row = Math.round((card.y - this.tableau[0].y) / card.area.y);
     if (col >= 0 && col < TABLEAU && row >= 0) {
       return this.tableau[col];
     }
@@ -422,7 +319,7 @@ export class Game {
     } else {
       const ix = card.pile.indexOf(card) - 1;
       const prev = card.pile.getCardByIndex(ix);
-      if ((!prev && card.rank !== 'K') || (prev && !prev.faceUp)) {
+      if ((!prev && card.rank !== Ranks.KING) || (prev && !prev.faceUp)) {
         this.addScore(5);
       }
     }
@@ -481,9 +378,5 @@ export class Game {
 
   get height() {
     return this.app.renderer.height / this.app.renderer.resolution;
-  }
-
-  get ratio() {
-    return this.width / this.height;
   }
 }

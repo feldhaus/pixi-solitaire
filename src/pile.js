@@ -135,14 +135,10 @@ export class PileTableau extends Pile {
   }
 
   handle(card) {
-    if (this.last) {
-      const prev = RANKS.indexOf(this.last.rank) - 1;
-      if (prev > -1) {
-        return this.last.color !== card.color && card.rank === RANKS[prev];
-      }
-      return false;
-    }
-    return card.rank === Ranks.KING;
+    if (!this.last) return card.rank === Ranks.KING;
+    const prev = RANKS.indexOf(this.last.rank) - 1;
+    if (prev === -1) return false;
+    return this.last.color !== card.color && card.rank === RANKS[prev];
   }
 
   resize(width, height) {
@@ -165,19 +161,19 @@ export class PileTableau extends Pile {
       this.cards[i].tail = this.cards[i + 1];
     }
   }
+
+  areAllRevealed() {
+    return !this.cards.some((card) => !card.faceUp);
+  }
 }
 
 export class PileFoundation extends Pile {
   handle(card) {
     if (card.tail) return false;
-    if (this.last) {
-      const next = RANKS.indexOf(this.last.rank) + 1;
-      if (next < RANKS.length) {
-        return this.last.suit === card.suit && card.rank === RANKS[next];
-      }
-      return false;
-    }
-    return card.rank === Ranks.ACE;
+    if (!this.last) return card.rank === Ranks.ACE;
+    const next = RANKS.indexOf(this.last.rank) + 1;
+    if (next === RANKS.length) return false;
+    return this.last.suit === card.suit && card.rank === RANKS[next];
   }
 }
 

@@ -22,6 +22,7 @@ export class Card extends Container {
     // interactive and drag stuffs
     this.interactive = false;
     this.buttonMode = false;
+    this.area = new Point();
 
     this.dragStartPosition = new Point();
     this.dragOffset = new Point();
@@ -89,7 +90,8 @@ export class Card extends Container {
   enableDrag() {
     this.enable();
     this.flipUp();
-    this.on('pointerdown', this.onDragStart, this)
+    this
+      .on('pointerdown', this.onDragStart, this)
       .on('pointerup', this.onDragStop, this)
       .on('pointerupoutside', this.onDragStop, this)
       .on('pointermove', this.onDragMove, this);
@@ -98,7 +100,8 @@ export class Card extends Container {
   disableDrag() {
     this.disable();
     this.flipDown();
-    this.off('pointerdown', this.onDragStart, this)
+    this
+      .off('pointerdown', this.onDragStart, this)
       .off('pointerup', this.onDragStop, this)
       .off('pointerupoutside', this.onDragStop, this)
       .off('pointermove', this.onDragMove, this);
